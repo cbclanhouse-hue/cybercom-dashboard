@@ -1,0 +1,108 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Cybercom Dashboard</title>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <div id="loginScreen" class="login-screen">
+    <div class="login-box">
+      <img src="logo.png" alt="Logo Cybercom">
+      <h1>Entrar no Sistema</h1>
+
+      <input id="user" placeholder="Usuário">
+      <input id="pass" type="password" placeholder="Senha">
+      <button onclick="login()">Entrar</button>
+      <p class="hint">Seja bem-vindo!</p>
+    </div>
+  </div>
+
+  <div id="app" class="hidden layout">
+    <div class="sidebar">
+      <div>
+        <div class="logo">
+          <img src="logo.png" alt="Logo Cybercom">
+        </div>
+        <div class="menu" id="menuArea"></div>
+      </div>
+      <div class="footer-logo">
+        <img src="logo.png" alt="Logo Cybercom">
+      </div>
+    </div>
+
+    <div class="main">
+      <div class="header">
+        <h2>Cybercom Dashboard</h2>
+        <div class="header-actions">
+          <span id="welcome"></span>
+          <button class="logout-btn" onclick="logout()">Sair</button>
+        </div>
+      </div>
+
+      <div class="content">
+        <div id="dashboardPage" class="page">
+          <div class="cards">
+            <div class="card"><h3>Produção Total</h3><p id="totalProduction">R$ 0</p></div>
+            <div class="card"><h3>Serviços Realizados</h3><p id="servicesCount">0</p></div>
+            <div class="card"><h3>Funcionários</h3><p id="employeeCount">0</p></div>
+          </div>
+          <div class="grid">
+            <div class="chart-box"><h2>Produção dos Funcionários</h2><canvas id="adminChart"></canvas></div>
+            <div class="chart-box"><h2>Distribuição de Serviços</h2><canvas id="serviceChart"></canvas></div>
+          </div>
+        </div>
+
+        <div id="employeesPage" class="page hidden">
+          <div class="chart-box">
+            <h2>Funcionários</h2>
+            <input id="newUser" placeholder="Usuário">
+            <input id="newPass" placeholder="Senha">
+            <button onclick="createUser()">Criar Funcionário</button>
+            <table id="usersTable"></table>
+          </div>
+        </div>
+
+        <div id="servicesPage" class="page hidden">
+          <div class="chart-box">
+            <h2>Serviços</h2>
+            <input id="serviceName" placeholder="Nome do serviço">
+            <input id="servicePrice" placeholder="Valor padrão">
+            <button onclick="createService()">Criar Serviço</button>
+            <table id="servicesTable"></table>
+          </div>
+        </div>
+
+        <div id="employeeHome" class="page hidden">
+          <div class="cards">
+            <div class="card"><h3>Produção do Dia</h3><p id="employeeToday">R$ 0</p></div>
+            <div class="card"><h3>Produção da Semana</h3><p id="employeeWeek">R$ 0</p></div>
+            <div class="card"><h3>Produção do Mês</h3><p id="employeeMonth">R$ 0</p></div>
+          </div>
+          <div class="chart-box"><h2>Minha Produção</h2><canvas id="employeeChart"></canvas></div>
+          <div class="chart-box actions-panel">
+            <h2>Registrar Ponto</h2>
+            <div class="actions">
+              <button class="bigbtn" onclick="point('Cheguei')">✅ CHEGUEI</button>
+              <button class="bigbtn" onclick="point('Saiu para almoço')">🍽 ALMOÇO</button>
+              <button class="bigbtn" onclick="point('Voltei do almoço')">🔙 VOLTEI</button>
+              <button class="bigbtn" onclick="point('Foi embora')">🏠 SAÍDA</button>
+            </div>
+          </div>
+          <div class="chart-box" style="margin-top:20px">
+            <h2>Serviços</h2>
+            <select id="serviceSelect"></select>
+            <input id="customValue" placeholder="Valor cobrado">
+            <button onclick="registerService()">Registrar Serviço</button>
+            <table id="employeeProductionTable"></table>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script src="app.js"></script>
+</body>
+</html>
