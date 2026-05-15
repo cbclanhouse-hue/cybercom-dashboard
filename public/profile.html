@@ -1,0 +1,206 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Editar Perfil - Cybercom</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <div class="login-screen" id="loadingScreen">
+    <div class="login-box">
+      <p>Carregando...</p>
+    </div>
+  </div>
+
+  <div class="login-screen hidden" id="loginRedirect">
+    <div class="login-box">
+      <h1>Sessao expirada</h1>
+      <p style="margin-top: 15px; color: #666;">Redirecionando para login...</p>
+    </div>
+  </div>
+
+  <div class="hidden profile-shell" id="profilePage">
+    <div class="header profile-header">
+      <h2>Cybercom Dashboard</h2>
+      <button class="logout-btn" onclick="logout()">Sair</button>
+    </div>
+
+    <div class="profile-page">
+      <a class="back-btn" onclick="goBack()">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor"><path d="M20 11H7.83l5.59-5.59L12 4l-8 8 8 8 1.41-1.41L7.83 13H20v-2z"/></svg>
+        Voltar ao painel
+      </a>
+
+      <div class="profile-hero">
+        <div>
+          <p class="profile-eyebrow">Meu Perfil</p>
+          <h1>Gerencie sua conta com seguranca</h1>
+          <p>Atualize sua foto, seu nome de exibicao e a senha de acesso sem sair do padrao visual do sistema.</p>
+        </div>
+      </div>
+
+      <div class="profile-card">
+        <div class="profile-photo-section">
+          <div id="photoPreview" class="profile-photo-preview-placeholder">
+            <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z"/></svg>
+          </div>
+          <div class="profile-photo-copy">
+            <h3>Foto do usuario</h3>
+            <p>A imagem sera exibida no canto superior direito do sistema.</p>
+          </div>
+          <form id="photoForm" enctype="multipart/form-data">
+            <input type="file" id="photoInput" name="photo" accept="image/*" class="hidden" onchange="previewPhoto(event)">
+            <button type="button" class="upload-btn" onclick="document.getElementById('photoInput').click()">Alterar Foto</button>
+          </form>
+        </div>
+
+        <div class="profile-form">
+          <label for="displayName">Nome de exibicao</label>
+          <input type="text" id="displayName" placeholder="Como voce quer ser chamado">
+
+          <label for="username">Usuario</label>
+          <input type="text" id="username" placeholder="Usuario" readonly class="readonly-input">
+
+          <label for="newPassword">Nova senha</label>
+          <input type="password" id="newPassword" placeholder="Deixe em branco para manter a senha atual">
+
+          <button onclick="saveProfile(event)">Salvar Alteracoes</button>
+          <p id="profileFeedback" class="form-hint">As alteracoes sao aplicadas na sua conta atual.</p>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    async function api(path, options = {}) {
+      const response = await fetch(path, {
+        headers: { 'Content-Type': 'application/json' },
+        credentials: 'same-origin',
+        ...options
+      });
+      return response.json();
+    }
+
+    async function checkSession() {
+      try {
+        const result = await api('/api/session');
+        if (!result.user) {
+          showLoginRedirect();
+          return;
+        }
+
+        loadProfile();
+      } catch (error) {
+        showLoginRedirect();
+      }
+    }
+
+    function showLoginRedirect() {
+      document.getElementById('loadingScreen').classList.add('hidden');
+      document.getElementById('loginRedirect').classList.remove('hidden');
+      setTimeout(() => {
+        window.location.href = 'index.html';
+      }, 2000);
+    }
+
+    async function loadProfile() {
+      document.getElementById('loadingScreen').classList.add('hidden');
+      document.getElementById('profilePage').classList.remove('hidden');
+
+      const result = await api('/api/user/profile');
+      if (result.error) {
+        alert(result.error);
+        return;
+      }
+
+      const profile = result.user;
+      document.getElementById('username').value = profile.username;
+      document.getElementById('displayName').value = profile.display_name || '';
+
+      if (profile.photo) {
+        document.getElementById('photoPreview').outerHTML = `<img id="photoPreview" class="profile-photo-preview" src="${profile.photo}" alt="Foto de perfil">`;
+      }
+    }
+
+    function previewPhoto(event) {
+      const file = event.target.files[0];
+      if (!file) return;
+
+      const reader = new FileReader();
+      reader.onload = function(loadEvent) {
+        const preview = document.getElementById('photoPreview');
+        if (preview.tagName === 'IMG') {
+          preview.src = loadEvent.target.result;
+        } else {
+          preview.outerHTML = `<img id="photoPreview" class="profile-photo-preview" src="${loadEvent.target.result}" alt="Preview">`;
+        }
+      };
+      reader.readAsDataURL(file);
+
+      uploadPhoto(file);
+    }
+
+    async function uploadPhoto(file) {
+      const formData = new FormData();
+      formData.append('photo', file);
+
+      try {
+        const response = await fetch('/api/user/photo', {
+          method: 'POST',
+          credentials: 'same-origin',
+          body: formData
+        });
+        const result = await response.json();
+        if (result.error) {
+          alert(result.error);
+          return;
+        }
+
+        document.getElementById('profileFeedback').innerText = 'Foto atualizada com sucesso.';
+      } catch (error) {
+        alert('Erro ao enviar foto');
+      }
+    }
+
+    async function saveProfile(event) {
+      event.preventDefault();
+
+      const display_name = document.getElementById('displayName').value.trim();
+      const password = document.getElementById('newPassword').value.trim();
+
+      if (!display_name && !password) {
+        alert('Preencha pelo menos um campo para alterar');
+        return;
+      }
+
+      const body = { display_name };
+      if (password) body.password = password;
+
+      const result = await api('/api/user/profile', {
+        method: 'PUT',
+        body: JSON.stringify(body)
+      });
+
+      if (result.error) {
+        alert(result.error);
+        return;
+      }
+
+      document.getElementById('newPassword').value = '';
+      document.getElementById('profileFeedback').innerText = 'Perfil atualizado com sucesso.';
+    }
+
+    function goBack() {
+      window.location.href = 'index.html';
+    }
+
+    async function logout() {
+      await api('/api/logout', { method: 'POST' });
+      window.location.href = 'index.html';
+    }
+
+    checkSession();
+  </script>
+</body>
+</html>

@@ -13,7 +13,7 @@
       <img src="logo.png" alt="Logo Cybercom">
       <h1>Entrar no Sistema</h1>
 
-      <input id="user" placeholder="Usuário">
+      <input id="user" placeholder="Usuario">
       <input id="pass" type="password" placeholder="Senha">
       <button onclick="login()">Entrar</button>
       <p class="hint">Seja bem-vindo!</p>
@@ -37,7 +37,16 @@
       <div class="header">
         <h2>Cybercom Dashboard</h2>
         <div class="header-actions">
-          <span id="welcome"></span>
+          <div class="user-profile-section">
+            <div id="userAvatar" class="user-avatar-placeholder" onclick="window.location.href='profile.html'">
+              <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z"/></svg>
+            </div>
+            <div class="user-copy">
+              <span class="user-label">Conta ativa</span>
+              <span id="welcome"></span>
+            </div>
+            <button class="edit-profile-btn" onclick="window.location.href='profile.html'">Editar Perfil</button>
+          </div>
           <button class="logout-btn" onclick="logout()">Sair</button>
         </div>
       </div>
@@ -45,57 +54,83 @@
       <div class="content">
         <div id="dashboardPage" class="page">
           <div class="cards">
-            <div class="card"><h3>Produção Total</h3><p id="totalProduction">R$ 0</p></div>
-            <div class="card"><h3>Serviços Realizados</h3><p id="servicesCount">0</p></div>
-            <div class="card"><h3>Funcionários</h3><p id="employeeCount">0</p></div>
+            <div class="card"><h3>Producao Total</h3><p id="totalProduction">R$ 0</p></div>
+            <div class="card"><h3>Servicos Realizados</h3><p id="servicesCount">0</p></div>
+            <div class="card"><h3>Funcionarios</h3><p id="employeeCount">0</p></div>
           </div>
           <div class="grid">
-            <div class="chart-box"><h2>Produção dos Funcionários</h2><canvas id="adminChart"></canvas></div>
-            <div class="chart-box"><h2>Distribuição de Serviços</h2><canvas id="serviceChart"></canvas></div>
+            <div class="chart-box">
+              <h2>Producao dos Funcionarios</h2>
+              <canvas id="adminChart"></canvas>
+            </div>
+            <div class="chart-box">
+              <div class="section-heading">
+                <div>
+                  <h2>Registro de Ponto do Dia</h2>
+                  <p>Acompanhe a rotina da equipe e todos os horarios registrados hoje.</p>
+                </div>
+              </div>
+              <div id="dailyPointsContainer"></div>
+            </div>
           </div>
         </div>
 
         <div id="employeesPage" class="page hidden">
           <div class="chart-box">
-            <h2>Funcionários</h2>
-            <input id="newUser" placeholder="Usuário">
+            <h2>Funcionarios</h2>
+            <input id="newUser" placeholder="Usuario">
             <input id="newPass" placeholder="Senha">
-            <button onclick="createUser()">Criar Funcionário</button>
+            <button onclick="createUser()">Criar Funcionario</button>
             <table id="usersTable"></table>
           </div>
         </div>
 
         <div id="servicesPage" class="page hidden">
           <div class="chart-box">
-            <h2>Serviços</h2>
-            <input id="serviceName" placeholder="Nome do serviço">
-            <input id="servicePrice" placeholder="Valor padrão">
-            <button onclick="createService()">Criar Serviço</button>
-            <table id="servicesTable"></table>
+            <div class="section-heading">
+              <div>
+                <h2>Servicos</h2>
+                <p>Cadastre, atualize e remova servicos com controle total dos valores.</p>
+              </div>
+            </div>
+
+            <div class="service-form-card">
+              <input id="serviceName" placeholder="Nome do servico">
+              <input id="servicePrice" placeholder="Valor padrao">
+              <div class="service-form-actions">
+                <button id="saveServiceButton" onclick="saveService()">Criar Servico</button>
+                <button id="cancelServiceEditButton" class="secondary-btn hidden" onclick="cancelServiceEdit()">Cancelar edicao</button>
+              </div>
+              <p id="serviceFormHint" class="form-hint">Preencha os campos para cadastrar um novo servico.</p>
+            </div>
+
+            <table id="servicesTable">
+              <tr><th>Servico</th><th>Valor</th><th>Acoes</th></tr>
+            </table>
           </div>
         </div>
 
         <div id="employeeHome" class="page hidden">
           <div class="cards">
-            <div class="card"><h3>Produção do Dia</h3><p id="employeeToday">R$ 0</p></div>
-            <div class="card"><h3>Produção da Semana</h3><p id="employeeWeek">R$ 0</p></div>
-            <div class="card"><h3>Produção do Mês</h3><p id="employeeMonth">R$ 0</p></div>
+            <div class="card"><h3>Producao do Dia</h3><p id="employeeToday">R$ 0</p></div>
+            <div class="card"><h3>Producao da Semana</h3><p id="employeeWeek">R$ 0</p></div>
+            <div class="card"><h3>Producao do Mes</h3><p id="employeeMonth">R$ 0</p></div>
           </div>
-          <div class="chart-box"><h2>Minha Produção</h2><canvas id="employeeChart"></canvas></div>
+          <div class="chart-box"><h2>Minha Producao</h2><canvas id="employeeChart"></canvas></div>
           <div class="chart-box actions-panel">
             <h2>Registrar Ponto</h2>
             <div class="actions">
-              <button class="bigbtn" onclick="point('Cheguei')">✅ CHEGUEI</button>
-              <button class="bigbtn" onclick="point('Saiu para almoço')">🍽 ALMOÇO</button>
-              <button class="bigbtn" onclick="point('Voltei do almoço')">🔙 VOLTEI</button>
-              <button class="bigbtn" onclick="point('Foi embora')">🏠 SAÍDA</button>
+              <button class="bigbtn" onclick="point('Cheguei')">CHEGUEI</button>
+              <button class="bigbtn" onclick="point('Saiu para almoco')">ALMOCO</button>
+              <button class="bigbtn" onclick="point('Voltei do almoco')">VOLTEI</button>
+              <button class="bigbtn" onclick="point('Foi embora')">SAIDA</button>
             </div>
           </div>
           <div class="chart-box" style="margin-top:20px">
-            <h2>Serviços</h2>
+            <h2>Servicos</h2>
             <select id="serviceSelect"></select>
             <input id="customValue" placeholder="Valor cobrado">
-            <button onclick="registerService()">Registrar Serviço</button>
+            <button onclick="registerService()">Registrar Servico</button>
             <table id="employeeProductionTable"></table>
           </div>
         </div>

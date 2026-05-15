@@ -5,7 +5,9 @@ CREATE TABLE IF NOT EXISTS users (
   id INT AUTO_INCREMENT PRIMARY KEY,
   username VARCHAR(100) NOT NULL UNIQUE,
   password VARCHAR(255) NOT NULL,
-  role ENUM('admin', 'employee') NOT NULL DEFAULT 'employee'
+  role ENUM('admin', 'employee') NOT NULL DEFAULT 'employee',
+  display_name VARCHAR(150) DEFAULT NULL,
+  photo VARCHAR(255) DEFAULT NULL
 );
 
 CREATE TABLE IF NOT EXISTS services (
@@ -34,7 +36,7 @@ CREATE TABLE IF NOT EXISTS points (
 );
 
 INSERT INTO users (username, password, role) VALUES
-('admin', '123', 'admin')
+('admin', 'scrypt:865d9ebe689d38dc0c171f412f832357:7629413b26adaa76b21ec9c57e3c78534974b7b754691a63bf6d98ed7605af9038bf1cf429935a21ce8b4a8be0f6d18bfb0f2b933314e1f37d6945b9c73a4089', 'admin')
 ON DUPLICATE KEY UPDATE username = username;
 
 INSERT INTO services (name, price) VALUES
