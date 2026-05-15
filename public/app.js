@@ -76,9 +76,11 @@ async function loadApp(user) {
       { label: 'Funcionarios', page: 'employeesPage' },
       { label: 'Servicos', page: 'servicesPage' }
     ]);
+    showPage('dashboardPage', document.querySelector('.menu a'));
     await loadAdmin();
   } else {
     setMenu([{ label: 'Minha Area', page: 'employeeHome' }]);
+    showPage('employeeHome', document.querySelector('.menu a'));
     await loadEmployee();
   }
 }
