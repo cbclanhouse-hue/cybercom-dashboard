@@ -22,6 +22,66 @@ const dbConfig = {
 
 const pool = mysql.createPool(dbConfig);
 
+async function ensureColumn(tableName, columnName, definition) {
+  const [rows] = await pool.query(`
+    SELECT 1
+    FROM information_schema.COLUMNS
+    WHERE TABLE_SCHEMA = ?
+      AND TABLE_NAME = ?
+      AND COLUMN_NAME = ?
+    LIMIT 1
+  `, [dbConfig.database, tableName, columnName]);
+
+  if (!rows.length) {
+    await pool.query(`ALTER TABLE \`${tableName}\` ADD COLUMN \`${columnName}\` ${definition}`);
+  }
+}
+
+async function ensureDatabaseSchema() {
+  await pool.query(`
+    CREATE TABLE IF NOT EXISTS users (
+      id INT AUTO_INCREMENT PRIMARY KEY,
+      username VARCHAR(100) NOT NULL UNIQUE,
+      password VARCHAR(255) NOT NULL,
+      role ENUM('admin', 'employee') NOT NULL DEFAULT 'employee'
+    )
+  `);
+
+  await pool.query(`
+    CREATE TABLE IF NOT EXISTS services (
+      id INT AUTO_INCREMENT PRIMARY KEY,
+      name VARCHAR(150) NOT NULL,
+      price DECIMAL(10,2) NOT NULL DEFAULT 0
+    )
+  `);
+
+  await pool.query(`
+    CREATE TABLE IF NOT EXISTS productions (
+      id INT AUTO_INCREMENT PRIMARY KEY,
+      user_id INT NOT NULL,
+      service_id INT NOT NULL,
+      service_name VARCHAR(150) NOT NULL,
+      value DECIMAL(10,2) NOT NULL,
+      date DATETIME NOT NULL,
+      FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
+      FOREIGN KEY (service_id) REFERENCES services(id) ON DELETE CASCADE
+    )
+  `);
+
+  await pool.query(`
+    CREATE TABLE IF NOT EXISTS points (
+      id INT AUTO_INCREMENT PRIMARY KEY,
+      user_id INT NOT NULL,
+      type VARCHAR(100) NOT NULL,
+      date DATETIME NOT NULL,
+      FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
+    )
+  `);
+
+  await ensureColumn('users', 'display_name', 'VARCHAR(150) DEFAULT NULL');
+  await ensureColumn('users', 'photo', 'VARCHAR(255) DEFAULT NULL');
+}
+
 function hashPassword(password) {
   const salt = crypto.randomBytes(16).toString('hex');
   const hash = crypto.scryptSync(password, salt, 64).toString('hex');
@@ -401,6 +461,13 @@ app.get('*', (req, res) => {
   res.sendFile(path.join(__dirname, 'public', 'index.html'));
 });
 
-app.listen(port, () => {
-  console.log(`Servidor iniciado em http://localhost:${port}`);
-});
+ensureDatabaseSchema()
+  .then(() => {
+    app.listen(port, () => {
+      console.log(`Servidor iniciado em http://localhost:${port}`);
+    });
+  })
+  .catch((error) => {
+    console.error('Erro ao preparar banco de dados:', error);
+    process.exit(1);
+  });
