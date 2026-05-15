@@ -3,6 +3,8 @@ const appScreen = document.getElementById('app');
 let adminChartInstance = null;
 let employeeChartInstance = null;
 let editingServiceId = null;
+let employeeServices = [];
+let selectedService = null;
 
 async function api(path, options = {}) {
   const response = await fetch(path, {
@@ -229,6 +231,25 @@ function renderServices(services) {
   }
 }
 
+function renderEmployeeServicesButtons(services) {
+  const container = document.getElementById('employeeServicesButtons');
+  if (!container) return;
+
+  employeeServices = services;
+
+  if (!services.length) {
+    container.innerHTML = '<p class="empty-state">Nenhum servico cadastrado pelo administrador.</p>';
+    return;
+  }
+
+  container.innerHTML = services.map((service) => `
+    <button class="service-action-btn" onclick="openServiceModal(${service.id})">
+      <span class="service-action-name">${service.name}</span>
+      <span class="service-action-price">Padrao R$ ${Number(service.price).toFixed(2)}</span>
+    </button>
+  `).join('');
+}
+
 function updateServiceFormState() {
   const saveButton = document.getElementById('saveServiceButton');
   const cancelButton = document.getElementById('cancelServiceEditButton');
@@ -302,7 +323,7 @@ async function deleteService(id) {
 async function loadEmployee() {
   const servicesResult = await api('/api/services');
   if (servicesResult.error) return alert(servicesResult.error);
-  renderServices(servicesResult.services);
+  renderEmployeeServicesButtons(servicesResult.services);
 
   const productionResult = await api('/api/employee/production');
   if (productionResult.error) return alert(productionResult.error);
@@ -368,13 +389,62 @@ async function point(type) {
   alert('Ponto registrado');
 }
 
-async function registerService() {
-  const serviceId = document.getElementById('serviceSelect').value;
-  const customValue = document.getElementById('customValue').value.trim();
+async function registerService(serviceId, customValue) {
   const result = await api('/api/productions', { method: 'POST', body: JSON.stringify({ serviceId, customValue }) });
   if (result.error) return alert(result.error);
   alert('Servico registrado');
   await loadEmployee();
+}
+
+function openActionModal(title, description) {
+  document.getElementById('actionModalTitle').innerText = title;
+  document.getElementById('actionModalDescription').innerText = description;
+  document.getElementById('actionModal').classList.remove('hidden');
+}
+
+function closeActionModal() {
+  document.getElementById('actionModal').classList.add('hidden');
+  document.getElementById('serviceModalBody').classList.add('hidden');
+  document.getElementById('pointModalBody').classList.add('hidden');
+  document.getElementById('serviceChargedValue').value = '';
+  selectedService = null;
+}
+
+function openServiceModal(serviceId) {
+  const service = employeeServices.find((item) => item.id === serviceId);
+  if (!service) return;
+
+  selectedService = service;
+  openActionModal('Registrar Servico', 'Informe o valor final cobrado nesse atendimento.');
+  document.getElementById('serviceModalBody').classList.remove('hidden');
+  document.getElementById('pointModalBody').classList.add('hidden');
+  document.getElementById('serviceModalName').innerText = service.name;
+  document.getElementById('serviceModalBasePrice').innerText = `Valor padrao R$ ${Number(service.price).toFixed(2)}`;
+  document.getElementById('serviceChargedValue').value = Number(service.price).toFixed(2);
+}
+
+async function confirmServiceRegistration() {
+  if (!selectedService) return;
+
+  const customValue = document.getElementById('serviceChargedValue').value.trim();
+  if (!customValue) {
+    alert('Informe o valor cobrado');
+    return;
+  }
+
+  await registerService(selectedService.id, customValue);
+  closeActionModal();
+}
+
+function openPointModal() {
+  openActionModal('Registrar Ponto', 'Escolha a etapa correspondente ao seu expediente.');
+  document.getElementById('pointModalBody').classList.remove('hidden');
+  document.getElementById('serviceModalBody').classList.add('hidden');
+}
+
+async function confirmPointRegistration(type) {
+  await point(type);
+  closeActionModal();
 }
 
 function renderAdminCharts(productions) {
@@ -419,6 +489,11 @@ window.cancelServiceEdit = cancelServiceEdit;
 window.deleteService = deleteService;
 window.point = point;
 window.registerService = registerService;
+window.openServiceModal = openServiceModal;
+window.openPointModal = openPointModal;
+window.confirmServiceRegistration = confirmServiceRegistration;
+window.confirmPointRegistration = confirmPointRegistration;
+window.closeActionModal = closeActionModal;
 window.login = login;
 window.logout = logout;
 

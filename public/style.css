@@ -108,6 +108,7 @@ body { font-family: Arial, sans-serif; background: #f4f4f4; color: #111; }
 
 .card p { font-size: 30px; font-weight: bold; margin-top: 10px; }
 .grid { display: grid; grid-template-columns: 2fr 1.2fr; gap: 20px; }
+.employee-grid { display: grid; grid-template-columns: 1.7fr 1fr; gap: 20px; }
 
 .actions {
   display: grid;
@@ -205,6 +206,55 @@ th { color: #6b7280; font-size: 12px; text-transform: uppercase; letter-spacing:
   border: 1px solid #ffe4d0;
 }
 
+.employee-services-buttons {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: 14px;
+  margin-top: 18px;
+}
+
+.service-action-btn {
+  border: 1px solid #ffe1cb;
+  background: linear-gradient(180deg, #fff8f2 0%, #ffffff 100%);
+  border-radius: 16px;
+  padding: 18px;
+  cursor: pointer;
+  text-align: left;
+  transition: transform 0.18s ease, box-shadow 0.18s ease, border-color 0.18s ease;
+}
+
+.service-action-btn:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 12px 24px rgba(255,115,0,.12);
+  border-color: #ffbe92;
+}
+
+.service-action-name {
+  display: block;
+  color: #111827;
+  font-size: 16px;
+  font-weight: 700;
+}
+
+.service-action-price {
+  display: block;
+  margin-top: 8px;
+  color: #f97316;
+  font-size: 13px;
+  font-weight: 700;
+}
+
+.employee-point-box {
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+}
+
+.point-launch-btn {
+  min-height: 120px;
+  font-size: 18px;
+}
+
 .service-form-actions {
   display: flex;
   gap: 12px;
@@ -217,6 +267,137 @@ th { color: #6b7280; font-size: 12px; text-transform: uppercase; letter-spacing:
   margin-top: 12px;
   font-size: 13px;
   color: #6b7280;
+}
+
+.modal-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(15,23,42,.55);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
+  z-index: 1000;
+}
+
+.modal {
+  width: 100%;
+  max-width: 460px;
+  background: white;
+  border-radius: 22px;
+  padding: 26px;
+  box-shadow: 0 30px 60px rgba(15,23,42,.25);
+}
+
+.modal-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 16px;
+  margin-bottom: 18px;
+}
+
+.modal-header p {
+  margin-top: 8px;
+  color: #6b7280;
+  line-height: 1.5;
+}
+
+.modal-close-btn {
+  width: 40px;
+  height: 40px;
+  border-radius: 999px;
+  border: none;
+  background: #f3f4f6;
+  color: #374151;
+  cursor: pointer;
+  font-size: 24px;
+  line-height: 1;
+  flex-shrink: 0;
+}
+
+.action-modal label {
+  display: block;
+  margin: 12px 0 8px;
+  color: #374151;
+  font-size: 14px;
+  font-weight: 600;
+}
+
+.action-modal input {
+  width: 100%;
+  padding: 14px;
+  border-radius: 12px;
+  border: 1px solid #ddd;
+}
+
+.service-modal-summary {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 14px 16px;
+  border-radius: 14px;
+  background: #fff7f0;
+  border: 1px solid #ffe1cb;
+}
+
+.service-badge {
+  color: #111827;
+  font-weight: 700;
+}
+
+.service-base-price {
+  color: #f97316;
+  font-size: 13px;
+  font-weight: 700;
+}
+
+.modal-actions {
+  display: flex;
+  gap: 12px;
+  margin-top: 18px;
+}
+
+.modal-actions button {
+  flex: 1;
+  padding: 14px;
+  border: none;
+  border-radius: 12px;
+  cursor: pointer;
+  font-weight: 700;
+}
+
+.modal-save {
+  background: #ff7300;
+  color: white;
+}
+
+.modal-cancel {
+  background: #f3f4f6;
+  color: #374151;
+}
+
+.point-options {
+  display: grid;
+  gap: 12px;
+}
+
+.point-option-btn {
+  border: 1px solid #ffd7b5;
+  background: linear-gradient(180deg, #fff8f2 0%, #ffffff 100%);
+  color: #111827;
+  padding: 16px;
+  border-radius: 14px;
+  cursor: pointer;
+  font-size: 15px;
+  font-weight: 700;
+  text-align: left;
+}
+
+.point-option-btn:hover {
+  border-color: #ffbe92;
+  color: #f97316;
 }
 
 .user-profile-section {
@@ -509,6 +690,7 @@ th { color: #6b7280; font-size: 12px; text-transform: uppercase; letter-spacing:
 
 @media (max-width: 1024px) {
   .grid { grid-template-columns: 1fr; }
+  .employee-grid { grid-template-columns: 1fr; }
   .profile-card { grid-template-columns: 1fr; }
   .profile-photo-section {
     border-right: none;
@@ -527,6 +709,8 @@ th { color: #6b7280; font-size: 12px; text-transform: uppercase; letter-spacing:
   .content { padding: 20px; }
   .service-form-actions { flex-direction: column; }
   .service-form-actions button { width: 100%; }
+  .service-modal-summary { flex-direction: column; align-items: flex-start; }
+  .modal-actions { flex-direction: column; }
   .profile-page { padding: 24px 16px 40px; }
   .profile-hero h1 { font-size: 26px; }
   .profile-card { padding: 24px; }
