@@ -21,6 +21,44 @@ const dbConfig = {
 };
 
 const pool = mysql.createPool(dbConfig);
+const userOptionalColumns = {
+  display_name: false,
+  photo: false
+};
+
+function getOptionalUserSelect(alias = null) {
+  const prefix = alias ? `${alias}.` : '';
+
+  return [
+    userOptionalColumns.display_name ? `${prefix}display_name AS display_name` : 'NULL AS display_name',
+    userOptionalColumns.photo ? `${prefix}photo AS photo` : 'NULL AS photo'
+  ].join(', ');
+}
+
+function getUserSelectFields(includePassword = false, alias = null) {
+  const prefix = alias ? `${alias}.` : '';
+  const fields = [
+    `${prefix}id AS id`,
+    `${prefix}username AS username`
+  ];
+
+  if (includePassword) {
+    fields.push(`${prefix}password AS password`);
+  }
+
+  fields.push(`${prefix}role AS role`);
+  fields.push(getOptionalUserSelect(alias));
+
+  return fields.join(', ');
+}
+
+async function refreshUserOptionalColumns() {
+  const [rows] = await pool.query('SHOW COLUMNS FROM users');
+  const columnNames = new Set(rows.map((row) => row.Field));
+
+  userOptionalColumns.display_name = columnNames.has('display_name');
+  userOptionalColumns.photo = columnNames.has('photo');
+}
 
 async function ensureColumn(tableName, columnName, definition) {
   const [rows] = await pool.query(`
@@ -80,6 +118,7 @@ async function ensureDatabaseSchema() {
 
   await ensureColumn('users', 'display_name', 'VARCHAR(150) DEFAULT NULL');
   await ensureColumn('users', 'photo', 'VARCHAR(255) DEFAULT NULL');
+  await refreshUserOptionalColumns();
 }
 
 function hashPassword(password) {
@@ -108,7 +147,7 @@ function verifyPassword(password, storedPassword) {
 
 async function loadSessionUser(userId) {
   const [rows] = await pool.query(
-    'SELECT id, username, role, display_name, photo FROM users WHERE id = ?',
+    `SELECT ${getUserSelectFields(false)} FROM users WHERE id = ?`,
     [userId]
   );
 
@@ -175,7 +214,7 @@ app.post('/api/login', async (req, res) => {
 
   try {
     const [rows] = await pool.query(
-      'SELECT id, username, password, role, display_name, photo FROM users WHERE username = ?',
+      `SELECT ${getUserSelectFields(true)} FROM users WHERE username = ?`,
       [username]
     );
     if (!rows.length) {
@@ -285,7 +324,7 @@ app.post('/api/user/photo', requireLogin, upload.single('photo'), async (req, re
 
 app.get('/api/dashboard', requireLogin, requireAdmin, async (req, res) => {
   try {
-    const [users] = await pool.query('SELECT id, username, role, display_name, photo FROM users');
+    const [users] = await pool.query(`SELECT ${getUserSelectFields(false)} FROM users`);
     const [services] = await pool.query('SELECT id, name, price FROM services');
     const [productions] = await pool.query('SELECT p.id, u.username AS user, p.service_name AS service, p.value, p.date FROM productions p JOIN users u ON p.user_id = u.id');
 
@@ -295,7 +334,7 @@ app.get('/api/dashboard', requireLogin, requireAdmin, async (req, res) => {
     tomorrow.setDate(tomorrow.getDate() + 1);
 
     const [points] = await pool.query(`
-      SELECT pt.id, pt.user_id, u.username AS user, u.display_name, pt.type, pt.date
+      SELECT pt.id, pt.user_id, u.username AS user, ${getOptionalUserSelect('u')}, pt.type, pt.date
       FROM points pt
       JOIN users u ON pt.user_id = u.id
       WHERE pt.date >= ? AND pt.date < ?
